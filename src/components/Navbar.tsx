@@ -12,13 +12,13 @@ const Navbar = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
-    <nav className="sticky top-0 z-50 bg-vietnam-cream/95 backdrop-blur-sm shadow-md">
+    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2">
-          <div className="rounded-full bg-vietnam-green w-10 h-10 flex items-center justify-center">
-            <MapPin className="text-vietnam-cream h-6 w-6" />
+          <div className="rounded-full bg-primary w-8 h-8 flex items-center justify-center">
+            <MapPin className="text-primary-foreground h-4 w-4" />
           </div>
-          <h1 className="text-vietnam-green text-xl font-bold">WanderWise Vietnam</h1>
+          <h1 className="text-primary text-lg font-medium">WanderWise</h1>
         </Link>
 
         {isMobile ? (
@@ -30,45 +30,45 @@ const Navbar = () => {
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
-                <X className="h-6 w-6 text-vietnam-green" />
+                <X className="h-5 w-5" />
               ) : (
-                <Menu className="h-6 w-6 text-vietnam-green" />
+                <Menu className="h-5 w-5" />
               )}
             </Button>
 
             {isMenuOpen && (
-              <div className="absolute top-full left-0 right-0 bg-vietnam-cream shadow-lg p-4 animate-fade-in">
+              <div className="absolute top-full left-0 right-0 bg-background border-b shadow-sm p-4 animate-fade-in">
                 <div className="flex flex-col gap-2">
                   <Link 
                     to="/" 
-                    className="text-vietnam-green hover:bg-vietnam-green/10 py-2 px-3 rounded-md"
+                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Home
                   </Link>
                   <Link 
                     to="/explore" 
-                    className="text-vietnam-green hover:bg-vietnam-green/10 py-2 px-3 rounded-md"
+                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Explore
                   </Link>
                   <Link 
                     to="/about" 
-                    className="text-vietnam-green hover:bg-vietnam-green/10 py-2 px-3 rounded-md"
+                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     About
                   </Link>
                   <Link 
                     to="/contribute" 
-                    className="text-vietnam-green hover:bg-vietnam-green/10 py-2 px-3 rounded-md"
+                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Contribute
                   </Link>
-                  <Button className="mt-2 bg-vietnam-terracotta hover:bg-vietnam-darkTerracotta">
-                    <User className="mr-2 h-4 w-4" /> Sign In
+                  <Button className="mt-2" variant="outline" size="sm">
+                    <User className="mr-2 h-3 w-3" /> Sign In
                   </Button>
                 </div>
               </div>
@@ -76,20 +76,20 @@ const Navbar = () => {
           </>
         ) : (
           <div className="flex items-center gap-6">
-            <Link to="/" className="text-vietnam-green hover:text-vietnam-darkTerracotta transition-colors">
+            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Home
             </Link>
-            <Link to="/explore" className="text-vietnam-green hover:text-vietnam-darkTerracotta transition-colors">
+            <Link to="/explore" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Explore
             </Link>
-            <Link to="/about" className="text-vietnam-green hover:text-vietnam-darkTerracotta transition-colors">
+            <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               About
             </Link>
-            <Link to="/contribute" className="text-vietnam-green hover:text-vietnam-darkTerracotta transition-colors">
+            <Link to="/contribute" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Contribute
             </Link>
-            <Button className="bg-vietnam-terracotta hover:bg-vietnam-darkTerracotta">
-              <User className="mr-2 h-4 w-4" /> Sign In
+            <Button variant="outline" size="sm">
+              <User className="mr-2 h-3 w-3" /> Sign In
             </Button>
           </div>
         )}
