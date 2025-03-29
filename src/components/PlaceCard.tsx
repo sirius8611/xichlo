@@ -4,7 +4,8 @@ import {
   Star, 
   MapPin, 
   DollarSign, 
-  Clock
+  Clock,
+  Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -18,6 +19,7 @@ interface PlaceCardProps {
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const [liked, setLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const renderPriceLevel = (level: number) => {
     return Array(3)
@@ -36,11 +38,18 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
     <Link to={`/place/${place.id}`} className="block">
       <div className="bg-card rounded-lg border shadow-sm overflow-hidden hover-lift">
         <div className="relative">
-          <img
-            src={place.imageUrl}
-            alt={place.name}
-            className="w-full h-48 object-cover"
-          />
+          {imageError ? (
+            <div className="w-full h-48 bg-muted flex items-center justify-center">
+              <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+          ) : (
+            <img
+              src={place.imageUrl}
+              alt={place.name}
+              className="w-full h-48 object-cover"
+              onError={() => setImageError(true)}
+            />
+          )}
           <Button
             variant="outline"
             size="icon"

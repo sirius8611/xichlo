@@ -6,17 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlaceById } from "@/services/placeService";
 import { Place } from "@/types/place";
-import { ArrowLeft, MapPin, Star, Clock, DollarSign, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, DollarSign, Calendar, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const PlaceDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const loadPlace = async () => {
       setLoading(true);
+      setImageError(false);
       try {
         if (id) {
           const placeData = await getPlaceById(id);
@@ -82,11 +84,19 @@ const PlaceDetails = () => {
         </Link>
 
         <div className="w-full h-72 md:h-96 rounded-lg overflow-hidden mb-8">
-          <img 
-            src={place.imageUrl} 
-            alt={place.name} 
-            className="w-full h-full object-cover"
-          />
+          {imageError ? (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <ImageIcon className="h-20 w-20 text-muted-foreground/50" />
+              <span className="text-muted-foreground ml-2">Image not available</span>
+            </div>
+          ) : (
+            <img 
+              src={place.imageUrl} 
+              alt={place.name} 
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
