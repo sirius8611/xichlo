@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Menu, X } from "lucide-react";
+import { MapPin, Compass, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -44,14 +44,14 @@ const Navbar = () => {
                     className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Home
+                    Explore
                   </Link>
                   <Link 
-                    to="/explore" 
+                    to="/discovery" 
                     className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Explore
+                    Discovery
                   </Link>
                 </div>
               </div>
@@ -60,10 +60,10 @@ const Navbar = () => {
         ) : (
           <div className="flex items-center gap-6">
             <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-              Home
-            </Link>
-            <Link to="/explore" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Explore
+            </Link>
+            <Link to="/discovery" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+              Discovery
             </Link>
           </div>
         )}

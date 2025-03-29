@@ -33,12 +33,16 @@ interface PreferenceFiltersProps {
     budget: number;
     useRealTimeLocation: boolean;
   }) => void;
+  initialUseLocation?: boolean;
 }
 
-const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange }) => {
+const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ 
+  onFilterChange, 
+  initialUseLocation = false 
+}) => {
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["explorer"]);
   const [budget, setBudget] = useState(2);
-  const [useRealTimeLocation, setUseRealTimeLocation] = useState(false);
+  const [useRealTimeLocation, setUseRealTimeLocation] = useState(initialUseLocation);
 
   const toggleTravelStyle = (styleId: string) => {
     setSelectedStyles(prev => {
@@ -80,17 +84,17 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <div className="bg-card rounded-lg border shadow-sm p-6 space-y-6">
       <div>
-        <h3 className="text-vietnam-blue font-medium mb-3">Travel Style</h3>
+        <h3 className="text-foreground font-medium mb-3">Travel Style</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {travelStyles.map(style => (
             <Button
               key={style.id}
               variant={selectedStyles.includes(style.id) ? "default" : "outline"}
               className={selectedStyles.includes(style.id) 
-                ? "bg-vietnam-green hover:bg-vietnam-green/90 text-white" 
-                : "border-vietnam-green text-vietnam-green hover:bg-vietnam-green/10"}
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
+                : "border-primary text-primary hover:bg-primary/10"}
               onClick={() => toggleTravelStyle(style.id)}
               size="sm"
             >
@@ -102,7 +106,7 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
       </div>
       
       <div>
-        <h3 className="text-vietnam-blue font-medium mb-3">Budget</h3>
+        <h3 className="text-foreground font-medium mb-3">Budget</h3>
         <div className="px-2">
           <Slider
             defaultValue={[budget]}
@@ -112,7 +116,7 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
             onValueChange={handleBudgetChange}
             className="my-4"
           />
-          <div className="flex justify-between text-sm text-vietnam-blue/70">
+          <div className="flex justify-between text-sm text-foreground/70">
             <div className="flex flex-col items-center">
               <DollarSign className="h-4 w-4" />
               <span>Budget</span>
@@ -120,7 +124,7 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
             <div className="flex flex-col items-center">
               <div className="flex">
                 {[...Array(3)].map((_, i) => (
-                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-vietnam-green' : 'text-vietnam-green/30'}`} />
+                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-primary' : 'text-primary/30'}`} />
                 ))}
               </div>
               <span>Mid-range</span>
@@ -128,7 +132,7 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
             <div className="flex flex-col items-center">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-vietnam-green' : 'text-vietnam-green/30'}`} />
+                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-primary' : 'text-primary/30'}`} />
                 ))}
               </div>
               <span>Luxury</span>
@@ -141,17 +145,17 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({ onFilterChange })
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center">
-              <MapPin className="h-4 w-4 text-vietnam-terracotta mr-2" />
-              <h3 className="text-vietnam-blue font-medium">Use Current Location</h3>
+              <MapPin className="h-4 w-4 text-primary mr-2" />
+              <h3 className="text-foreground font-medium">Use Current Location</h3>
             </div>
-            <p className="text-sm text-vietnam-blue/70">
+            <p className="text-sm text-foreground/70">
               Enable real-time recommendations based on your location
             </p>
           </div>
           <Switch
             checked={useRealTimeLocation}
             onCheckedChange={toggleLocationUse}
-            className="data-[state=checked]:bg-vietnam-terracotta"
+            className="data-[state=checked]:bg-primary"
           />
         </div>
       </div>

@@ -54,16 +54,18 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
           >
             <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
           </Button>
-          {place.localFavorite && (
-            <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
-              Local Favorite
-            </Badge>
-          )}
         </div>
         
         <div className="p-4">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold">{place.name}</h3>
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">{place.name}</h3>
+              {place.localFavorite && (
+                <Badge className="mt-1 w-fit bg-primary text-primary-foreground">
+                  Local Favorite
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center">
               <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
               <span className="text-sm font-medium">{place.rating.toFixed(1)}</span>
