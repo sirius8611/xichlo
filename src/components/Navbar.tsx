@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, User, Menu, X } from "lucide-react";
+import { MapPin, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -53,23 +53,6 @@ const Navbar = () => {
                   >
                     Explore
                   </Link>
-                  <Link 
-                    to="/about" 
-                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                  <Link 
-                    to="/contribute" 
-                    className="text-muted-foreground hover:text-foreground py-2 px-3 rounded-md"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Contribute
-                  </Link>
-                  <Button className="mt-2" variant="outline" size="sm">
-                    <User className="mr-2 h-3 w-3" /> Sign In
-                  </Button>
                 </div>
               </div>
             )}
@@ -82,15 +65,6 @@ const Navbar = () => {
             <Link to="/explore" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Explore
             </Link>
-            <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-              About
-            </Link>
-            <Link to="/contribute" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-              Contribute
-            </Link>
-            <Button variant="outline" size="sm">
-              <User className="mr-2 h-3 w-3" /> Sign In
-            </Button>
           </div>
         )}
       </div>
