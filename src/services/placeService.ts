@@ -1,5 +1,6 @@
 
 import { Place } from "@/types/place";
+import { v4 as uuidv4 } from 'uuid';
 
 // Mock data for places in Hanoi
 const placesData: Place[] = [
@@ -408,4 +409,51 @@ export const getFilteredPlaces = (
   }
   
   return Promise.resolve(filtered);
+};
+
+// Add the missing functions
+export const savePlace = (place: Partial<Place>): Promise<Place> => {
+  if (place.id) {
+    // Update existing place
+    const index = placesData.findIndex(p => p.id === place.id);
+    
+    if (index >= 0) {
+      placesData[index] = { ...placesData[index], ...place } as Place;
+      return Promise.resolve(placesData[index]);
+    } else {
+      return Promise.reject(new Error("Place not found"));
+    }
+  } else {
+    // Create new place
+    const newPlace: Place = {
+      id: uuidv4(),
+      name: place.name || "Unnamed Place",
+      description: place.description || "",
+      imageUrl: place.imageUrl || "",
+      location: place.location || "Unknown location",
+      coordinates: place.coordinates || { lat: 0, lng: 0 },
+      rating: place.rating || 0,
+      reviewCount: place.reviewCount || 0,
+      priceLevel: place.priceLevel || 1,
+      tags: place.tags || [],
+      timeToVisit: place.timeToVisit || "",
+      localFavorite: place.localFavorite || false,
+      travelStyles: place.travelStyles || [],
+      createdBy: place.createdBy || { isLocal: false }
+    };
+    
+    placesData.push(newPlace);
+    return Promise.resolve(newPlace);
+  }
+};
+
+export const deletePlace = (id: string): Promise<void> => {
+  const index = placesData.findIndex(place => place.id === id);
+  
+  if (index >= 0) {
+    placesData.splice(index, 1);
+    return Promise.resolve();
+  } else {
+    return Promise.reject(new Error("Place not found"));
+  }
 };
