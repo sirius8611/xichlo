@@ -439,7 +439,11 @@ export const savePlace = (place: Partial<Place>): Promise<Place> => {
       timeToVisit: place.timeToVisit || "",
       localFavorite: place.localFavorite || false,
       travelStyles: place.travelStyles || [],
-      createdBy: place.createdBy || { isLocal: false }
+      createdBy: place.createdBy || {
+        id: "anonymous",
+        name: "Anonymous User",
+        isLocal: false
+      }
     };
     
     placesData.push(newPlace);
