@@ -5,11 +5,12 @@ import PlaceCard from "@/components/PlaceCard";
 import PreferenceFilters from "@/components/PreferenceFilters";
 import { getFilteredPlaces } from "@/services/placeService";
 import { Place } from "@/types/place";
-import { MapPin, Compass, SlidersHorizontal, X, Navigation } from "lucide-react";
+import { MapPin, Compass, SlidersHorizontal, X, Navigation, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "@/hooks/use-location";
 import { toast } from "@/components/ui/use-toast";
+import LocationPicker from "@/components/LocationPicker";
 
 const Explore = () => {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -20,6 +21,8 @@ const Explore = () => {
     useRealTimeLocation: true
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [customLocation, setCustomLocation] = useState<{lat: number, lng: number} | null>(null);
   const isMobile = useIsMobile();
   const location = useLocation();
 
@@ -37,14 +40,24 @@ const Explore = () => {
     const loadPlaces = async () => {
       setLoading(true);
       try {
-        // Use real user location if available, otherwise use default Hanoi location
-        const nearbyLocation = filters.useRealTimeLocation && (location.latitude && location.longitude) 
-          ? { 
-              lat: location.latitude, 
-              lng: location.longitude, 
-              radius: 10 
-            } 
-          : { lat: 21.0278, lng: 105.8342, radius: 10 }; // Hanoi center coordinates as fallback
+        // Use custom location if set, then real user location if enabled, otherwise use default Hanoi location
+        let nearbyLocation;
+        
+        if (customLocation) {
+          nearbyLocation = { 
+            lat: customLocation.lat, 
+            lng: customLocation.lng, 
+            radius: 10 
+          };
+        } else if (filters.useRealTimeLocation && (location.latitude && location.longitude)) {
+          nearbyLocation = { 
+            lat: location.latitude, 
+            lng: location.longitude, 
+            radius: 10 
+          };
+        } else {
+          nearbyLocation = { lat: 21.0278, lng: 105.8342, radius: 10 }; // Hanoi center coordinates as fallback
+        }
         
         const filteredPlaces = await getFilteredPlaces(
           filters.travelStyles,
@@ -68,7 +81,7 @@ const Explore = () => {
     if (!location.loading || location.error) {
       loadPlaces();
     }
-  }, [filters, location.loading, location.latitude, location.longitude, location.error]);
+  }, [filters, location.loading, location.latitude, location.longitude, location.error, customLocation]);
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
@@ -78,8 +91,21 @@ const Explore = () => {
     setShowFilters(!showFilters);
   };
 
+  const handleLocationSelect = (lat: number, lng: number, locationName: string) => {
+    setCustomLocation({ lat, lng });
+    setShowLocationPicker(false);
+    toast({
+      title: "Location updated",
+      description: `Showing places near ${locationName}`
+    });
+  };
+
   // Get location name based on coordinates
   const getLocationName = () => {
+    if (customLocation) {
+      return "Custom Location";
+    }
+    
     if (location.error && location.error.includes("default")) {
       return "Hanoi (Default)";
     }
@@ -104,20 +130,30 @@ const Explore = () => {
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               Explore Nearby Places
             </h1>
-            <div className="flex items-center text-primary-foreground/80 mb-6">
+            <div className="flex items-center text-primary-foreground/80 mb-4">
               <Navigation className="h-5 w-5 mr-2 animate-pulse" />
               <p>{getLocationName()}</p>
             </div>
             
-            {isMobile && (
+            <div className="flex flex-wrap gap-3">
               <Button 
-                onClick={toggleFilters}
+                onClick={() => setShowLocationPicker(true)}
                 className="bg-background text-primary hover:bg-background/90"
               >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                {showFilters ? "Hide Filters" : "Show Filters"}
+                <MapPinned className="mr-2 h-4 w-4" />
+                Change Location
               </Button>
-            )}
+              
+              {isMobile && (
+                <Button 
+                  onClick={toggleFilters}
+                  className="bg-background text-primary hover:bg-background/90"
+                >
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -163,12 +199,10 @@ const Explore = () => {
                 Budget: {Array(filters.budget).fill('$').join('')}
               </span>
               
-              {filters.useRealTimeLocation && (
-                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  Near {getLocationName()}
-                </span>
-              )}
+              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center">
+                <MapPin className="h-3 w-3 mr-1" />
+                Near {getLocationName()}
+              </span>
             </div>
             
             {/* Results count */}
@@ -177,9 +211,11 @@ const Explore = () => {
                 {loading ? 'Finding places...' : `${places.length} places found`}
               </h2>
               <p className="text-foreground/70 text-sm">
-                {filters.useRealTimeLocation 
-                  ? `Showing places near ${getLocationName()}` 
-                  : 'Showing places across this region'}
+                {customLocation
+                  ? 'Showing places near custom location'
+                  : filters.useRealTimeLocation 
+                    ? `Showing places near ${getLocationName()}` 
+                    : 'Showing places across this region'}
               </p>
             </div>
             
@@ -189,7 +225,7 @@ const Explore = () => {
                 {[...Array(6)].map((_, idx) => (
                   <div 
                     key={idx} 
-                    className="bg-card rounded-lg shadow-md h-80 animate-pulse"
+                    className="bg-card rounded-lg shadow-md h-64 animate-pulse"
                   />
                 ))}
               </div>
@@ -222,6 +258,14 @@ const Explore = () => {
           </div>
         </div>
       </main>
+      
+      {/* Location Picker Dialog */}
+      {showLocationPicker && (
+        <LocationPicker 
+          onClose={() => setShowLocationPicker(false)} 
+          onSelectLocation={handleLocationSelect}
+        />
+      )}
     </div>
   );
 };
