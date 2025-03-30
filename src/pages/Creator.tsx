@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -7,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Place } from "@/types/place";
 import { Book, Building, Edit, Trash2, Plus, MapPin, User, Image as ImageIcon } from "lucide-react";
-import { getPlaces } from "@/services/placeService";
+import { getPlaces, deletePlace } from "@/services/placeService";
 import { toast } from "@/components/ui/use-toast";
 import { 
   AlertDialog,
@@ -56,6 +55,7 @@ const Creator = () => {
   const [guides, setGuides] = useState<Guide[]>(sampleGuides);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("places");
+  const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null);
   
   useEffect(() => {
     const loadPlaces = async () => {
@@ -81,13 +81,24 @@ const Creator = () => {
   }, []);
   
   const handleDeletePlace = async (id: string) => {
-    // This would be an API call in a real app
-    // For demo purposes, we'll just update the local state
-    setPlaces(places.filter(place => place.id !== id));
-    toast({
-      title: "Place deleted",
-      description: "The place has been successfully deleted."
-    });
+    setDeleteInProgress(id);
+    try {
+      await deletePlace(id);
+      setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== id));
+      toast({
+        title: "Place deleted",
+        description: "The place has been successfully deleted."
+      });
+    } catch (error) {
+      console.error("Failed to delete place:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the place. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteInProgress(null);
+    }
   };
   
   const handleDeleteGuide = async (id: string) => {

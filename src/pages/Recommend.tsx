@@ -25,6 +25,7 @@ const Recommend = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
+  const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -62,9 +63,11 @@ const Recommend = () => {
   }, [searchQuery, places]);
   
   const handleDeletePlace = async (id: string) => {
+    setDeleteInProgress(id);
     try {
       await deletePlace(id);
-      setPlaces(places.filter(place => place.id !== id));
+      setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== id));
+      setFilteredPlaces(prevFiltered => prevFiltered.filter(place => place.id !== id));
       toast({
         title: "Place deleted",
         description: "The place has been successfully deleted."
@@ -76,6 +79,8 @@ const Recommend = () => {
         description: "Failed to delete the place. Please try again later.",
         variant: "destructive"
       });
+    } finally {
+      setDeleteInProgress(null);
     }
   };
   
