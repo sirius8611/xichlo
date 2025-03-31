@@ -5,10 +5,12 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Place } from "@/types/place";
 import { Link } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
+import { saveFavoritePlace, isFavoritePlaceSaved } from "@/services/favoriteService";
 
 interface PlaceCardProps {
   place: Place;
@@ -17,6 +19,39 @@ interface PlaceCardProps {
 const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const [liked, setLiked] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    // Check if this place is already saved as a favorite
+    const checkIfFavorite = async () => {
+      const isFavorite = await isFavoritePlaceSaved(place.id);
+      setLiked(isFavorite);
+    };
+    
+    checkIfFavorite();
+  }, [place.id]);
+
+  const handleLikeToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    try {
+      await saveFavoritePlace(place.id, !liked);
+      setLiked(!liked);
+      
+      toast({
+        title: liked ? "Removed from favorites" : "Added to favorites",
+        description: liked 
+          ? `You've removed ${place.name} from your favorites` 
+          : `You've added ${place.name} to your favorites`,
+      });
+    } catch (error) {
+      console.error("Failed to update favorite status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Link to={`/place/${place.id}`} className="block">
@@ -56,10 +91,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
                 className={`rounded-full bg-white/30 backdrop-blur-sm ${
                   liked ? "text-red-500" : "text-white"
                 }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setLiked(!liked);
-                }}
+                onClick={handleLikeToggle}
               >
                 <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
               </Button>

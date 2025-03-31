@@ -55,6 +55,16 @@ const Discovery = () => {
     if (category !== "all") {
       results = results.filter(place => {
         if (category === "localFavorites") return place.localFavorite;
+        if (category === "food") {
+          return place.tags.some(tag => 
+            tag.toLowerCase().includes("food") || 
+            tag.toLowerCase().includes("restaurant") || 
+            tag.toLowerCase().includes("café") || 
+            tag.toLowerCase().includes("cafe") || 
+            tag.toLowerCase().includes("drink") || 
+            tag.toLowerCase().includes("bar")
+          );
+        }
         return place.tags.includes(category) || place.travelStyles.includes(category);
       });
     }

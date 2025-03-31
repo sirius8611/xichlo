@@ -15,7 +15,8 @@ import {
   Compass,
   DollarSign,
   Sun,
-  MapPin
+  MapPin,
+  Crown
 } from "lucide-react";
 
 const travelStyles = [
@@ -25,6 +26,7 @@ const travelStyles = [
   { id: "photography", label: "Photography", icon: <Camera className="h-4 w-4" /> },
   { id: "social", label: "Social", icon: <Users className="h-4 w-4" /> },
   { id: "nature", label: "Nature", icon: <Tent className="h-4 w-4" /> },
+  { id: "luxury", label: "Luxury", icon: <Crown className="h-4 w-4" /> },
 ];
 
 interface PreferenceFiltersProps {
@@ -64,12 +66,11 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({
     });
   };
 
-  const handleBudgetChange = (value: number[]) => {
-    const newBudget = value[0];
-    setBudget(newBudget);
+  const handleBudgetChange = (value: number) => {
+    setBudget(value);
     onFilterChange({
       travelStyles: selectedStyles,
-      budget: newBudget,
+      budget: value,
       useRealTimeLocation
     });
   };
@@ -107,37 +108,37 @@ const PreferenceFilters: React.FC<PreferenceFiltersProps> = ({
       
       <div>
         <h3 className="text-foreground font-medium mb-3">Budget</h3>
-        <div className="px-2">
-          <Slider
-            defaultValue={[budget]}
-            max={5}
-            min={1}
-            step={1}
-            onValueChange={handleBudgetChange}
-            className="my-4"
-          />
-          <div className="flex justify-between text-sm text-foreground/70">
-            <div className="flex flex-col items-center">
-              <DollarSign className="h-4 w-4" />
-              <span>Budget</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex">
-                {[...Array(3)].map((_, i) => (
-                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-primary' : 'text-primary/30'}`} />
-                ))}
-              </div>
-              <span>Mid-range</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <DollarSign key={i} className={`h-4 w-4 ${i < budget ? 'text-primary' : 'text-primary/30'}`} />
-                ))}
-              </div>
-              <span>Luxury</span>
-            </div>
-          </div>
+        <div className="flex justify-between items-center space-x-3">
+          <Button 
+            variant={budget === 1 ? "default" : "outline"}
+            size="sm" 
+            onClick={() => handleBudgetChange(1)}
+            className="flex-1"
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Budget
+          </Button>
+          <Button 
+            variant={budget === 3 ? "default" : "outline"}
+            size="sm" 
+            onClick={() => handleBudgetChange(3)}
+            className="flex-1"
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            <DollarSign className="h-4 w-4 mr-1" />
+            Mid-range
+          </Button>
+          <Button 
+            variant={budget === 5 ? "default" : "outline"}
+            size="sm" 
+            onClick={() => handleBudgetChange(5)}
+            className="flex-1"
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            <DollarSign className="h-4 w-4 mr-1" />
+            <DollarSign className="h-4 w-4" />
+            Luxury
+          </Button>
         </div>
       </div>
       

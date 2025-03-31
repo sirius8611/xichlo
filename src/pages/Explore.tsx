@@ -1,16 +1,16 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import PlaceCard from "@/components/PlaceCard";
 import PreferenceFilters from "@/components/PreferenceFilters";
 import { getFilteredPlaces } from "@/services/placeService";
 import { Place } from "@/types/place";
-import { MapPin, Compass, SlidersHorizontal, X, Navigation, MapPinned } from "lucide-react";
+import { MapPin, Compass, SlidersHorizontal, X, Navigation, MapPinned, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "@/hooks/use-location";
 import { toast } from "@/components/ui/use-toast";
 import LocationPicker from "@/components/LocationPicker";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Explore = () => {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -23,6 +23,8 @@ const Explore = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [customLocation, setCustomLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locationInfo, setLocationInfo] = useState<any>(null);
+  const [loadingLocationInfo, setLoadingLocationInfo] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
 
@@ -37,10 +39,37 @@ const Explore = () => {
   }, [location.error]);
 
   useEffect(() => {
+    const fetchLocationInfo = async () => {
+      if (!location.latitude || !location.longitude) return;
+      
+      setLoadingLocationInfo(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}&zoom=10`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setLocationInfo(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch location details:", error);
+      } finally {
+        setLoadingLocationInfo(false);
+      }
+    };
+
+    if (filters.useRealTimeLocation && location.latitude && location.longitude && !customLocation) {
+      fetchLocationInfo();
+    } else {
+      setLocationInfo(null);
+    }
+  }, [location.latitude, location.longitude, filters.useRealTimeLocation, customLocation]);
+
+  useEffect(() => {
     const loadPlaces = async () => {
       setLoading(true);
       try {
-        // Use custom location if set, then real user location if enabled, otherwise use default Hanoi location
         let nearbyLocation;
         
         if (customLocation) {
@@ -100,7 +129,23 @@ const Explore = () => {
     });
   };
 
-  // Get location name based on coordinates
+  const getLocationInfo = () => {
+    if (loadingLocationInfo) {
+      return "Loading location information...";
+    }
+    
+    if (locationInfo?.address) {
+      const address = locationInfo.address;
+      return [
+        address.city || address.town || address.village || address.county || "",
+        address.state || "",
+        address.country || ""
+      ].filter(Boolean).join(", ");
+    }
+    
+    return null;
+  };
+
   const getLocationName = () => {
     if (customLocation) {
       return "Custom Location";
@@ -111,8 +156,6 @@ const Explore = () => {
     }
     
     if (location.latitude && location.longitude) {
-      // For MVP, we'll just show coordinates
-      // In a real app, you'd use reverse geocoding to get the city name
       return `Your Location (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
     }
     
@@ -123,17 +166,25 @@ const Explore = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Header */}
       <header className="bg-primary py-12 px-4 text-primary-foreground">
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               Explore Nearby Places
             </h1>
-            <div className="flex items-center text-primary-foreground/80 mb-4">
+            <div className="flex items-center text-primary-foreground/80 mb-2">
               <Navigation className="h-5 w-5 mr-2 animate-pulse" />
               <p>{getLocationName()}</p>
             </div>
+            
+            {getLocationInfo() && (
+              <div className="flex items-start text-primary-foreground/80 mb-4">
+                <Info className="h-5 w-5 mr-2 mt-0.5" />
+                <div>
+                  <p className="mb-1">{getLocationInfo()}</p>
+                </div>
+              </div>
+            )}
             
             <div className="flex flex-wrap gap-3">
               <Button 
@@ -158,10 +209,8 @@ const Explore = () => {
         </div>
       </header>
       
-      {/* Main content */}
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters */}
           {(showFilters || !isMobile) && (
             <div className="lg:col-span-1 relative">
               <div className="lg:sticky lg:top-24">
@@ -180,9 +229,7 @@ const Explore = () => {
             </div>
           )}
           
-          {/* Places Grid */}
           <div className={`${(showFilters || !isMobile) ? 'lg:col-span-3' : 'lg:col-span-4'}`}>
-            {/* Current filter summary */}
             <div className="mb-6 flex flex-wrap items-center gap-2">
               <div className="flex items-center text-foreground/70 mr-2">
                 <Compass className="h-4 w-4 mr-1" />
@@ -205,7 +252,6 @@ const Explore = () => {
               </span>
             </div>
             
-            {/* Results count */}
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-foreground mb-1">
                 {loading ? 'Finding places...' : `${places.length} places found`}
@@ -219,7 +265,6 @@ const Explore = () => {
               </p>
             </div>
             
-            {/* Places grid */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, idx) => (
@@ -259,7 +304,6 @@ const Explore = () => {
         </div>
       </main>
       
-      {/* Location Picker Dialog */}
       {showLocationPicker && (
         <LocationPicker 
           onClose={() => setShowLocationPicker(false)} 

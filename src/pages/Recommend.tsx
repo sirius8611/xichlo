@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Place } from "@/types/place";
-import { Plus, Edit, Trash2, Search, MapPin, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Search, MapPin, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { getPlaces, deletePlace } from "@/services/placeService";
@@ -19,6 +19,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+// Mock user ID for demo purposes - in a real app this would come from auth
+const CURRENT_USER_ID = "user123";
 
 const Recommend = () => {
   const [places, setPlaces] = useState<Place[]>([]);
@@ -82,6 +85,11 @@ const Recommend = () => {
     } finally {
       setDeleteInProgress(null);
     }
+  };
+
+  // Check if current user is the owner of the place
+  const isOwner = (place: Place) => {
+    return place.createdBy?.id === CURRENT_USER_ID;
   };
   
   return (
@@ -173,37 +181,48 @@ const Recommend = () => {
                         >
                           <MapPin className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/recommend/edit/${place.id}`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                        
+                        {isOwner(place) ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => navigate(`/recommend/edit/${place.id}`)}
+                            >
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Place</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete '{place.name}'? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={() => handleDeletePlace(place.id)}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Place</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete '{place.name}'? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => handleDeletePlace(place.id)}
+                                    disabled={deleteInProgress === place.id}
+                                  >
+                                    {deleteInProgress === place.id ? "Deleting..." : "Delete"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        ) : (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <AlertCircle className="h-4 w-4 mr-1 text-amber-500" />
+                            <span className="text-xs">Only owners can edit</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
