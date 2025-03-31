@@ -6,14 +6,57 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlaceById } from "@/services/placeService";
 import { Place } from "@/types/place";
-import { ArrowLeft, MapPin, Star, Clock, DollarSign, Calendar, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, DollarSign, Calendar, Image as ImageIcon, Book } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Sample guide type for display in the place details
+interface Guide {
+  id: string;
+  title: string;
+  description: string;
+  places: string[];
+  imageUrl: string;
+  createdAt: string;
+  createdBy?: {
+    id: string;
+    name: string;
+  };
+}
+
+// Sample guides for demo
+const sampleGuides: Guide[] = [
+  {
+    id: "guide1",
+    title: "Best Food Tour in Hanoi",
+    description: "A 3-day food adventure exploring the best street food in Hanoi.",
+    places: ["place1", "place2", "place3"],
+    imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",
+    createdAt: "2023-09-01",
+    createdBy: {
+      id: "user1",
+      name: "Travel Explorer"
+    }
+  },
+  {
+    id: "guide2",
+    title: "Weekend in Da Nang",
+    description: "A perfect weekend itinerary for exploring Da Nang's beaches and mountains.",
+    places: ["place4", "place5"],
+    imageUrl: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb",
+    createdAt: "2023-10-15",
+    createdBy: {
+      id: "user2",
+      name: "Beach Lover"
+    }
+  }
+];
 
 const PlaceDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [relatedGuides, setRelatedGuides] = useState<Guide[]>([]);
 
   useEffect(() => {
     const loadPlace = async () => {
@@ -23,6 +66,14 @@ const PlaceDetails = () => {
         if (id) {
           const placeData = await getPlaceById(id);
           setPlace(placeData || null);
+          
+          // Find guides that include this place
+          if (placeData) {
+            const guidesWithThisPlace = sampleGuides.filter(guide => 
+              guide.places.includes(placeData.id)
+            );
+            setRelatedGuides(guidesWithThisPlace);
+          }
         }
       } catch (error) {
         console.error("Failed to load place:", error);
@@ -135,16 +186,53 @@ const PlaceDetails = () => {
             </div>
 
             <div className="mb-8">
-              <h2 className="text-xl font-medium mb-3">Local guides</h2>
-              <div className="grid grid-cols-1 gap-4">
+              <h2 className="text-xl font-medium mb-3">Travel Guides featuring this place</h2>
+              {relatedGuides.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {relatedGuides.map(guide => (
+                    <Card key={guide.id} className="overflow-hidden">
+                      <div className="flex flex-col sm:flex-row">
+                        <div className="w-full sm:w-36 h-24 bg-muted">
+                          {guide.imageUrl ? (
+                            <img
+                              src={guide.imageUrl}
+                              alt={guide.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <Book className="h-8 w-8 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-medium mb-1">{guide.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{guide.description}</p>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <span>By {guide.createdBy?.name || "Anonymous"}</span>
+                            <span className="mx-1">•</span>
+                            <span>{new Date(guide.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
                 <Card>
                   <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground italic">
-                      "No local guides have been added for this location yet. Be the first to contribute!"
-                    </p>
+                    <div className="flex items-center">
+                      <Book className="h-5 w-5 text-muted-foreground mr-2" />
+                      <p className="text-sm text-muted-foreground italic">
+                        No travel guides include this place yet. 
+                        <Link to="/creator/guide/add" className="ml-1 text-primary hover:underline">
+                          Create the first guide!
+                        </Link>
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
+              )}
             </div>
           </div>
 

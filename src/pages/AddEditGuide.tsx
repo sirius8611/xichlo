@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, GripVertical, MapPin, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, X, GripVertical, MapPin, Image as ImageIcon, Search } from "lucide-react";
 import { Place } from "@/types/place";
 import { getPlaces } from "@/services/placeService";
 import {
@@ -20,14 +20,19 @@ import {
 } from "@/components/ui/select";
 import { v4 as uuidv4 } from 'uuid';
 
-// Sample guide type
+// Enhanced guide type with more details
 interface Guide {
   id: string;
   title: string;
   description: string;
-  places: string[];
+  places: string[]; // Place IDs
   imageUrl: string;
   createdAt: string;
+  createdBy?: {
+    id: string;
+    name: string;
+  };
+  tags?: string[];
 }
 
 // Sample guides for demo
@@ -38,7 +43,8 @@ const sampleGuides: Guide[] = [
     description: "A 3-day food adventure exploring the best street food in Hanoi.",
     places: ["place1", "place2", "place3"],
     imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",
-    createdAt: "2023-09-01"
+    createdAt: "2023-09-01",
+    tags: ["food", "local", "hanoi"]
   },
   {
     id: "guide2",
@@ -46,7 +52,8 @@ const sampleGuides: Guide[] = [
     description: "A perfect weekend itinerary for exploring Da Nang's beaches and mountains.",
     places: ["place4", "place5"],
     imageUrl: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb",
-    createdAt: "2023-10-15"
+    createdAt: "2023-10-15",
+    tags: ["beach", "mountains", "weekend"]
   }
 ];
 
@@ -60,11 +67,14 @@ const AddEditGuide = () => {
     description: "",
     places: [],
     imageUrl: "",
+    tags: [],
   });
   
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [selectedPlaces, setSelectedPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tagInput, setTagInput] = useState("");
   
   useEffect(() => {
     const loadPlaces = async () => {
@@ -82,6 +92,7 @@ const AddEditGuide = () => {
               description: guide.description,
               places: guide.places,
               imageUrl: guide.imageUrl,
+              tags: guide.tags,
             });
             
             // Find the selected places
@@ -127,15 +138,28 @@ const AddEditGuide = () => {
         ...prev,
         places: [...(prev.places || []), placeId]
       }));
+      
+      toast({
+        title: "Place added",
+        description: `${place.name} has been added to your guide.`
+      });
     }
   };
   
   const handleRemovePlace = (placeId: string) => {
+    const place = selectedPlaces.find(p => p.id === placeId);
     setSelectedPlaces(selectedPlaces.filter(place => place.id !== placeId));
     setFormData(prev => ({
       ...prev,
       places: prev.places?.filter(id => id !== placeId) || []
     }));
+    
+    if (place) {
+      toast({
+        title: "Place removed",
+        description: `${place.name} has been removed from your guide.`
+      });
+    }
   };
   
   const handleMovePlaceUp = (index: number) => {
@@ -174,6 +198,29 @@ const AddEditGuide = () => {
     setFormData(prev => ({ ...prev, places: newPlaceIds }));
   };
   
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      
+      if (!formData.tags?.includes(newTag)) {
+        setFormData(prev => ({
+          ...prev,
+          tags: [...(prev.tags || []), newTag]
+        }));
+      }
+      
+      setTagInput("");
+    }
+  };
+  
+  const handleRemoveTag = (tag: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags?.filter(t => t !== tag) || []
+    }));
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -188,20 +235,45 @@ const AddEditGuide = () => {
     
     setLoading(true);
     
-    // This would be an API call in a real app
+    // Create a new guide object
+    const newGuide: Guide = {
+      id: isEditMode && id ? id : uuidv4(),
+      title: formData.title!,
+      description: formData.description!,
+      places: formData.places!,
+      imageUrl: formData.imageUrl || "",
+      createdAt: isEditMode ? sampleGuides.find(g => g.id === id)?.createdAt || new Date().toISOString() : new Date().toISOString(),
+      tags: formData.tags || [],
+      createdBy: {
+        id: "user1", // In a real app, this would be the current user's ID
+        name: "Current User", // In a real app, this would be the current user's name
+      }
+    };
+    
+    // In a real app, this would be an API call to save the guide
     // For demo purposes, we'll just show a success toast
     setTimeout(() => {
       toast({
         title: isEditMode ? "Guide updated" : "Guide created",
         description: isEditMode 
-          ? "Your guide has been successfully updated." 
-          : "Your guide has been successfully created."
+          ? "Your guide has been successfully updated and linked to the selected places." 
+          : "Your guide has been successfully created and linked to the selected places."
       });
       
       setLoading(false);
       navigate("/creator");
     }, 1000);
   };
+  
+  // Filter places based on search term
+  const filteredPlaces = allPlaces
+    .filter(place => !selectedPlaces.some(p => p.id === place.id))
+    .filter(place => 
+      searchTerm === "" || 
+      place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      place.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      place.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
   
   return (
     <div className="min-h-screen bg-background">
@@ -261,6 +333,37 @@ const AddEditGuide = () => {
                       placeholder="Enter image URL for your guide cover"
                     />
                   </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="tags">Tags</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {formData.tags?.map((tag, index) => (
+                        <div 
+                          key={index} 
+                          className="bg-secondary text-secondary-foreground px-2 py-1 rounded-full text-sm flex items-center"
+                        >
+                          {tag}
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveTag(tag)}
+                            className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <Input
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleAddTag}
+                      placeholder="Type a tag and press Enter"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Add tags to help users find your guide. Press Enter to add each tag.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -268,28 +371,74 @@ const AddEditGuide = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Places in Your Guide</h2>
-                <div className="flex items-center gap-2">
-                  <Select
-                    onValueChange={handleAddPlace}
-                  >
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Add place" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allPlaces
-                        .filter(place => !selectedPlaces.some(p => p.id === place.id))
-                        .map((place) => (
-                          <SelectItem key={place.id} value={place.id}>
-                            {place.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="space-y-4">
+                    <Label htmlFor="search-places">Search Places</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="search-places"
+                        type="text"
+                        placeholder="Search by name, location, or tags..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                      {filteredPlaces.length > 0 ? (
+                        filteredPlaces.map((place) => (
+                          <div 
+                            key={place.id} 
+                            className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+                            onClick={() => handleAddPlace(place.id)}
+                          >
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 bg-muted rounded-md mr-2 flex-shrink-0">
+                                {place.imageUrl ? (
+                                  <img 
+                                    src={place.imageUrl} 
+                                    alt={place.name} 
+                                    className="w-full h-full object-cover rounded-md"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium">{place.name}</h4>
+                                <div className="flex items-center text-xs text-muted-foreground">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  <span>{place.location}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <Plus className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 text-center py-4 text-muted-foreground">
+                          {searchTerm ? "No places match your search" : "No more places available to add"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               
               {selectedPlaces.length > 0 ? (
                 <div className="space-y-2">
+                  <h3 className="text-base font-medium">Selected Places</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Arrange places in the order you want them to appear in your guide
+                  </p>
+                  
                   {selectedPlaces.map((place, index) => (
                     <Card key={place.id} className="overflow-hidden">
                       <div className="flex items-center p-4">
