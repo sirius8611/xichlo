@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import PlaceCard from "@/components/PlaceCard";
 import PreferenceFilters from "@/components/PreferenceFilters";
+import LocationDetails from "@/components/LocationDetails";
 import { getFilteredPlaces } from "@/services/placeService";
 import { Place } from "@/types/place";
 import { MapPin, Compass, SlidersHorizontal, X, Navigation, MapPinned, Info } from "lucide-react";
@@ -210,6 +212,14 @@ const Explore = () => {
       </header>
       
       <main className="container mx-auto px-4 py-8">
+        {!showFilters && (
+          <LocationDetails 
+            latitude={customLocation?.lat ?? location.latitude}
+            longitude={customLocation?.lng ?? location.longitude}
+            loading={location.loading || loadingLocationInfo}
+          />
+        )}
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {(showFilters || !isMobile) && (
             <div className="lg:col-span-1 relative">

@@ -6,6 +6,10 @@ interface LocationState {
   longitude: number | null;
   error: string | null;
   loading: boolean;
+  fullAddress?: string;
+  streetName?: string;
+  houseNumber?: string;
+  preciseLocation?: boolean;
 }
 
 export const useLocation = () => {
@@ -31,7 +35,8 @@ export const useLocation = () => {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         error: null,
-        loading: false
+        loading: false,
+        preciseLocation: true
       });
     };
 
@@ -50,11 +55,19 @@ export const useLocation = () => {
         latitude: 21.0278,
         longitude: 105.8342,
         error: "Using default location (Hanoi)",
-        loading: false
+        loading: false,
+        preciseLocation: false
       });
     };
 
-    navigator.geolocation.getCurrentPosition(success, error);
+    // Use high accuracy option for more precise location
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(success, error, options);
 
     // Fallback setTimeout in case permission dialog gets stuck
     const timeoutId = setTimeout(setupFallbackLocation, 5000);
