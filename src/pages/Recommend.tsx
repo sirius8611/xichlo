@@ -4,10 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Place } from "@/types/place";
-import { Plus, Edit, Trash2, Search, MapPin, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, MapPin, Image as ImageIcon, AlertCircle, Map, ThumbsUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { getPlaces, deletePlace } from "@/services/placeService";
+import { getRecommendedPlaceIds, saveRecommendedPlace } from "@/services/recommendService";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ const CURRENT_USER_ID = "user123";
 
 const Recommend = () => {
   const [places, setPlaces] = useState<Place[]>([]);
+  const [recommendedPlaceIds, setRecommendedPlaceIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
@@ -32,12 +34,28 @@ const Recommend = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    const loadPlaces = async () => {
+    const loadPlacesAndRecommendations = async () => {
       setLoading(true);
       try {
-        const fetchedPlaces = await getPlaces();
-        setPlaces(fetchedPlaces);
-        setFilteredPlaces(fetchedPlaces);
+        const [fetchedPlaces, recommendedIds] = await Promise.all([
+          getPlaces(),
+          getRecommendedPlaceIds()
+        ]);
+        
+        setRecommendedPlaceIds(recommendedIds);
+        
+        // Show recommended places first, then the rest
+        const sortedPlaces = [...fetchedPlaces].sort((a, b) => {
+          const aIsRecommended = recommendedIds.includes(a.id);
+          const bIsRecommended = recommendedIds.includes(b.id);
+          
+          if (aIsRecommended && !bIsRecommended) return -1;
+          if (!aIsRecommended && bIsRecommended) return 1;
+          return 0;
+        });
+        
+        setPlaces(sortedPlaces);
+        setFilteredPlaces(sortedPlaces);
       } catch (error) {
         console.error("Failed to load places:", error);
         toast({
@@ -50,7 +68,7 @@ const Recommend = () => {
       }
     };
     
-    loadPlaces();
+    loadPlacesAndRecommendations();
   }, []);
   
   useEffect(() => {
@@ -87,9 +105,41 @@ const Recommend = () => {
     }
   };
 
+  const handleToggleRecommend = async (placeId: string, currently: boolean) => {
+    try {
+      await saveRecommendedPlace(placeId, !currently);
+      
+      // Update local state
+      if (currently) {
+        setRecommendedPlaceIds(prev => prev.filter(id => id !== placeId));
+      } else {
+        setRecommendedPlaceIds(prev => [...prev, placeId]);
+      }
+      
+      toast({
+        title: currently ? "Removed from recommendations" : "Added to recommendations",
+        description: currently 
+          ? "This place has been removed from your recommendations" 
+          : "This place has been added to your recommendations",
+      });
+    } catch (error) {
+      console.error("Failed to update recommendation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update recommendation status",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Check if current user is the owner of the place
   const isOwner = (place: Place) => {
     return place.createdBy?.id === CURRENT_USER_ID;
+  };
+  
+  // Check if place is recommended
+  const isRecommended = (placeId: string) => {
+    return recommendedPlaceIds.includes(placeId);
   };
   
   return (
@@ -99,9 +149,12 @@ const Recommend = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Recommend Places</h1>
+            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+              <Map className="h-8 w-8 text-primary" />
+              Map Management
+            </h1>
             <p className="text-muted-foreground">
-              Share your favorite places or add your own business.
+              Manage your recommended places and add new locations to the map.
             </p>
           </div>
           
@@ -134,7 +187,9 @@ const Recommend = () => {
             {filteredPlaces.map(place => (
               <div 
                 key={place.id} 
-                className="bg-card rounded-lg border overflow-hidden flex flex-col sm:flex-row"
+                className={`bg-card rounded-lg border overflow-hidden flex flex-col sm:flex-row ${
+                  isRecommended(place.id) ? 'border-primary/30 bg-primary/5' : ''
+                }`}
               >
                 <div className="w-full sm:w-48 h-32 bg-muted">
                   {place.imageUrl ? (
@@ -174,6 +229,15 @@ const Recommend = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`${isRecommended(place.id) ? 'text-amber-500' : ''}`}
+                          onClick={() => handleToggleRecommend(place.id, isRecommended(place.id))}
+                        >
+                          <ThumbsUp className={`h-4 w-4 ${isRecommended(place.id) ? 'fill-current' : ''}`} />
+                        </Button>
+                        
                         <Button
                           variant="ghost"
                           size="icon"
@@ -247,6 +311,13 @@ const Recommend = () => {
                     {place.createdBy?.isLocal && (
                       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                         Owner
+                      </span>
+                    )}
+                    
+                    {isRecommended(place.id) && (
+                      <span className="text-xs bg-amber-500/10 text-amber-500 px-2 py-1 rounded-full flex items-center">
+                        <ThumbsUp className="h-3 w-3 mr-1" />
+                        Recommended
                       </span>
                     )}
                   </div>

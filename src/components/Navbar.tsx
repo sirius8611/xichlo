@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Compass, Menu, X, Plus, Book, UserCircle } from "lucide-react";
+import { MapPin, Compass, Menu, X, Plus, Book, UserCircle, Map } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -14,7 +14,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Explore", path: "/", icon: MapPin },
     { name: "Discovery", path: "/discovery", icon: Compass },
-    { name: "Recommend", path: "/recommend", icon: Plus },
+    { name: "Maps", path: "/recommend", icon: Map },
     { name: "Experiences", path: "/experiences", icon: Book },
     { name: "Creator", path: "/creator", icon: UserCircle },
   ];

@@ -2,7 +2,8 @@
 import { 
   Heart, 
   MapPin,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ThumbsUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -11,6 +12,7 @@ import { Place } from "@/types/place";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { saveFavoritePlace, isFavoritePlaceSaved } from "@/services/favoriteService";
+import { saveRecommendedPlace, isPlaceRecommended } from "@/services/recommendService";
 
 interface PlaceCardProps {
   place: Place;
@@ -18,16 +20,20 @@ interface PlaceCardProps {
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const [liked, setLiked] = useState(false);
+  const [recommended, setRecommended] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // Check if this place is already saved as a favorite
-    const checkIfFavorite = async () => {
+    // Check if this place is already saved as a favorite and as recommended
+    const checkIfFavoriteAndRecommended = async () => {
       const isFavorite = await isFavoritePlaceSaved(place.id);
       setLiked(isFavorite);
+      
+      const isRecommend = await isPlaceRecommended(place.id);
+      setRecommended(isRecommend);
     };
     
-    checkIfFavorite();
+    checkIfFavoriteAndRecommended();
   }, [place.id]);
 
   const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -48,6 +54,29 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
       toast({
         title: "Error",
         description: "Failed to update favorite status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRecommendToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    try {
+      await saveRecommendedPlace(place.id, !recommended);
+      setRecommended(!recommended);
+      
+      toast({
+        title: recommended ? "Removed from recommendations" : "Added to recommendations",
+        description: recommended 
+          ? `You've removed ${place.name} from your recommendations` 
+          : `You've added ${place.name} to your recommendations`,
+      });
+    } catch (error) {
+      console.error("Failed to update recommendation status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update recommendation status",
         variant: "destructive"
       });
     }
@@ -85,16 +114,28 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
                 )}
                 <h3 className="text-xl font-semibold text-white">{place.name}</h3>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className={`rounded-full bg-white/30 backdrop-blur-sm ${
-                  liked ? "text-red-500" : "text-white"
-                }`}
-                onClick={handleLikeToggle}
-              >
-                <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-full bg-white/30 backdrop-blur-sm ${
+                    recommended ? "text-amber-500" : "text-white"
+                  }`}
+                  onClick={handleRecommendToggle}
+                >
+                  <ThumbsUp className={`h-4 w-4 ${recommended ? "fill-current" : ""}`} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-full bg-white/30 backdrop-blur-sm ${
+                    liked ? "text-red-500" : "text-white"
+                  }`}
+                  onClick={handleLikeToggle}
+                >
+                  <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
+                </Button>
+              </div>
             </div>
             
             <div className="flex items-center text-white/90 text-sm mb-1">
